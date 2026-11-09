@@ -13,8 +13,9 @@ return new class extends Migration
     {
         Schema::create('areas', function (Blueprint $table) {
             $table->id();
-            $table->string('nama_area'); // Contoh: "Parkiran Fakultas Teknik"
-            $table->integer('kapasitas_total'); // Contoh: 20
+            $table->string('nama_area');       // Contoh: "Fakultas Teknik"
+            $table->string('kode_area');       // Contoh: "FT", "FEB", "FKIP" (Digunakan untuk prefix slot: FT001)
+            $table->integer('kapasitas_total')->default(100); // Admin bisa ubah misal dari 100 ke 200 tanpa ubah struktur DB
             $table->timestamps();
         });
     }

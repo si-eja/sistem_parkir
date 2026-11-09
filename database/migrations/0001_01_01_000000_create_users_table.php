@@ -15,10 +15,19 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            // Tambahkan kolom role ini untuk membedakan Jukir dan Admin
-            $table->enum('role', ['JUKIR', 'ADMIN'])->default('JUKIR'); 
+            
+            // Role Pengguna Sistem
+            $table->enum('role', ['PENGENDARA', 'JUKIR', 'ADMIN'])->default('PENGENDARA');
+            
+            // Master Profil Kendaraan Pengendara (Universal)
+            $table->string('plat_nomor');
+            $table->enum('jenis_kendaraan', ['MOTOR', 'MOBIL'])->default('MOTOR');
+            $table->enum('kategori_pengguna', ['MAHASISWA', 'DOSEN', 'STAFF', 'UMUM'])->default('MAHASISWA');
+            
+            // Token Permanen untuk QR Code / Barcode
+            $table->string('qr_code_token')->unique();
+            
             $table->rememberToken();
             $table->timestamps();
         });

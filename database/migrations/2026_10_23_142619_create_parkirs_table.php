@@ -13,16 +13,21 @@ return new class extends Migration
     {
         Schema::create('parkirs', function (Blueprint $table) {
             $table->id();
-            $table->string('plat_nomor');
-            $table->foreignId('area_id')->constrained('areas')->onDelete('cascade');
-            
-            // Tambahkan relasi ke tabel users. Kolom ini bisa bernilai kosong (nullable) 
-            // karena jika pengendara masuk MANDIRI, tidak ada jukir yang mencatatnya.
+    
+            // Mengacu ke Akun Pengendara
             $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
+            
+            // Snapshot data saat transaksi parkir berlangsung
+            $table->string('plat_nomor');
+            $table->string('jenis_kendaraan')->default('MOTOR');
+            $table->string('kategori_pengguna')->default('MAHASISWA');
+            
+            $table->foreignId('area_id')->constrained('areas')->onDelete('cascade');
+            $table->integer('nomor_slot')->nullable(); // Nomor Slot (misal: 4 untuk FT004)
             
             $table->timestamp('waktu_keluar')->nullable();
             $table->enum('status', ['AKTIF', 'SELESAI'])->default('AKTIF');
-            $table->enum('input_oleh', ['MANDIRI', 'JUKIR'])->default('MANDIRI');
+            $table->enum('input_oleh', ['MANDIRI', 'JUKIR', 'GATE'])->default('MANDIRI');
             $table->timestamps();
         });
     }
