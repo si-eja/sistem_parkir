@@ -10,28 +10,38 @@ class AreaController extends Controller
 {
     public function dashboardJukir(Request $request)
     {
-        $semua_area = Area::withCount(['parkir as parkir_aktif_count' => function ($query) {
-            $query->where('status', 'AKTIF');
+        $semua_area = Area::withCount(['parkir as parkir_aktif_count' => function ($query) {$query->where('status', 'AKTIF');
         }])->get();
 
-        $selectedAreaId = $request->query('area_id', $semua_area->first()->id ?? 1);
-        $area = Area::findOrFail($selectedAreaId);
+        $selectedAreaId = $request->query('area_id',$semua_area->first()->id ?? null);
+        $area = $selectedAreaId ? Area::findOrFail($selectedAreaId) : null;
 
-        $kendaraan_aktif = Parkir::with('user')
-            ->where('area_id', $area->id)
-            ->where('status', 'AKTIF')
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $kendaraan_aktif = collect();$sisa_kuota = 0;
+        $slot_kosong_list = [];
 
-        $sisa_kuota = max(0, $area->kapasitas_total - $kendaraan_aktif->count());
+        if ($area) {$kendaraan_aktif = Parkir::with('user')
+                ->where('area_id', $area->id)
+                ->where('status', 'AKTIF')
+                ->orderBy('created_at', 'desc')
+                ->get();
 
-        return view('jukir', compact('area', 'kendaraan_aktif', 'sisa_kuota', 'semua_area'));
+            $sisa_kuota = max(0, $area->kapasitas_total -$kendaraan_aktif->count());
+
+            // Hitung daftar slot kosong untuk dropdown pilihan slot opsional
+            $slot_terpakai =$kendaraan_aktif->pluck('nomor_slot')->toArray();
+            for ($i = 1; $i <= $area->kapasitas_total; $i++) {
+                if (!in_array($i,$slot_terpakai)) {
+                    $slot_kosong_list[] =$i;
+                }
+            }
+        }
+
+        return view('jukir', compact('area', 'kendaraan_aktif', 'sisa_kuota', 'semua_area', 'slot_kosong_list'));
     }
 
     public function dashboardAdmin()
     {
-        $semua_area = Area::withCount(['parkir as parkir_aktif_count' => function ($query) {
-            $query->where('status', 'AKTIF');
+        $semua_area = Area::withCount(['parkir as parkir_aktif_count' => function ($query) {$query->where('status', 'AKTIF');
         }])->get();
 
         $riwayat_parkir = Parkir::with(['area', 'user'])
@@ -43,12 +53,11 @@ class AreaController extends Controller
         return view('admin', compact('semua_area', 'riwayat_parkir'));
     }
 
-    // Monitoring Grid Virtual Slot (FT001 s/d FT200) tanpa memberatkan DB
+    // Monitoring Grid Virtual Slot (FT001 s/d FT200)
     public function detailSlotArea($id)
     {
         $area = Area::findOrFail($id);
 
-        // Ambil transaksi aktif yang di-key berdasarkan nomor_slot
         $parkirAktif = Parkir::with('user')
             ->where('area_id', $area->id)
             ->where('status', 'AKTIF')
@@ -57,8 +66,7 @@ class AreaController extends Controller
 
         $listSlot = [];
         for ($i = 1; $i <= $area->kapasitas_total; $i++) {
-            $kodeSlot = $area->kode_area . str_pad($i, 3, '0', STR_PAD_LEFT);
-            $terisi = isset($parkirAktif[$i]);
+            $kodeSlot =$area->kode_area . str_pad($i, 3, '0', STR_PAD_LEFT);$terisi = isset($parkirAktif[$i]);
 
             $listSlot[] = [
                 'nomor'     => $i,
@@ -79,10 +87,17 @@ class AreaController extends Controller
         ]);
 
         $area = Area::findOrFail($request->area_id);
+        $terisiSaatIni = Parkir::where('area_id',$area->id)->where('status', 'AKTIF')->count();
+
+        // Cegah kapasitas baru lebih kecil dari jumlah kendaraan yang sedang parkir saat ini
+        if ($request->kapasitas_baru <$terisiSaatIni) {
+            return back()->with('error', "Gagal! Saat ini masih ada {$terisiSaatIni} kendaraan parkir aktif di {$area->nama_area}.");
+        }
+
         $area->update([
             'kapasitas_total' => $request->kapasitas_baru
         ]);
 
-        return back()->with('success', 'Batas kuota ' . $area->nama_area . ' berhasil dikonfigurasi ulang menjadi ' . $request->kapasitas_baru . ' Slot.');
+        return back()->with('success', 'Batas kuota ' . $area->nama_area . ' berhasil dikonfigurasi ulang menjadi ' .$request->kapasitas_baru . ' Slot.');
     }
 }

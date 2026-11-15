@@ -6,42 +6,91 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class SistemController extends Controller
 {
-    // Registrasi Akun Pengendara Mandiri (5 Data Universal)
+    // Registrasi Akun Pengendara
     public function prosesRegister(Request $request)
     {
         $request->validate([
             'name'            => 'required|string|max:255',
             'email'           => 'required|string|email|max:255|unique:users',
             'password'        => 'required|string|min:6|confirmed',
-            'plat_nomor'      => 'required|string|max:12',
+            'plat_nomor'      => 'required|string|max:15',
             'jenis_kendaraan' => 'required|in:MOTOR,MOBIL',
         ]);
 
-        $platFormatted = strtoupper(str_replace(' ', '', $request->plat_nomor));
+        $platFormatted = strtoupper(str_replace(' ', '', trim($request->plat_nomor)));
 
         $user = User::create([
-            'name'             => $request->name,
-            'email'            => $request->email,
-            'password'         => Hash::make($request->password),
-            'role'             => 'PENGENDARA',
-            'plat_nomor'       => $platFormatted,
-            'jenis_kendaraan'  => $request->jenis_kendaraan,
-            'kategori_pengguna'=> $request->kategori_pengguna ?? 'MAHASISWA',
+            'name'              => $request->name,
+            'email'             => $request->email,
+            'password'          => Hash::make($request->password),
+            'role'              => 'PENGENDARA',
+            'plat_nomor'        => $platFormatted,
+            'jenis_kendaraan'   => $request->jenis_kendaraan,
+            'kategori_pengguna' => $request->kategori_pengguna ?? 'MAHASISWA',
+            'qr_code_token'     => 'PARKIR-' . strtoupper(Str::random(10)),
         ]);
 
-        // Otomatis Login setelah registrasi berhasil
         Auth::login($user);
 
-        return redirect()->route('pengendara.dashboard')->with('success', 'Pendaftaran Berhasil! Barcode Parkir Anda telah dibuat.');
+        return redirect()->route('pengendara.dashboard')->with('success', 'Pendaftaran Berhasil! Kartu QR Parkir Anda siap digunakan.');
     }
 
-    // Kelola Petugas / User oleh Admin
-    public function kelolaUser()
+    // Tambah Akun Petugas Parkir Baru
+    public function storePetugas(Request $request)
     {
-        $users = User::orderBy('created_at', 'desc')->get();
-        return view('admin_users', compact('users'));
+        $request->validate([
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users,email',
+            'password' => 'required|string|min:6',
+        ]);
+
+        User::create([
+            'name'       => $request->name,
+            'email'      => $request->email,
+            'password'   => Hash::make($request->password),
+            'role'       => 'JUKIR',
+            'plat_nomor' => '-',
+        ]);
+
+        return back()->with('success', "Akun petugas parkir {$request->name} berhasil ditambahkan!");
+    }
+
+    // Edit Data / Reset Password Petugas Parkir
+    public function updatePetugas(Request $request, $id)
+    {
+        $petugas = User::where('role', 'JUKIR')->findOrFail($id);
+
+        $request->validate([
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users,email,' . $petugas->id,
+            'password' => 'nullable|string|min:6',
+        ]);
+
+        $dataUpdate = [
+            'name'  => $request->name,
+            'email' => $request->email,
+        ];
+
+        if ($request->filled('password')) {
+            $dataUpdate['password'] = Hash::make($request->password);
+        }
+
+        $petugas->update($dataUpdate);
+
+        return back()->with('success', "Data petugas {$petugas->name} berhasil diperbarui!");
+    }
+
+    // Hapus Akun Petugas Parkir
+    public function deletePetugas($id)
+    {
+        $petugas = User::where('role', 'JUKIR')->findOrFail($id);
+        $nama = $petugas->name;
+        $petugas->delete();
+
+        return back()->with('success', "Akun petugas {$nama} telah dihapus dari sistem.");
     }
 }
