@@ -238,10 +238,16 @@
                                         <span class="input-group-text bg-light border-end-0 text-unsil">
                                             <i class="bi bi-card-text"></i>
                                         </span>
-                                        <input type="text" name="plat_nomor" 
-                                               class="form-control border-start-0 rounded-end-3 text-uppercase fw-bold @error('plat_nomor') is-invalid @enderror" 
-                                               placeholder="Z 1234 AB" 
-                                               value="{{ old('plat_nomor') }}" required autocomplete="off">
+                                        <input type="text" 
+                                            name="plat_nomor" 
+                                            class="form-control text-uppercase fw-bold rounded-3" 
+                                            placeholder="Contoh: Z1234AB"
+                                            maxlength="11"
+                                            pattern="[A-Za-z]{1,2}\s?[1-9][0-9]{0,3}\s?[A-Za-z]{1,3}"
+                                            title="Format plat nomor Indonesia yang valid (1-2 huruf depan, 1-4 angka, 1-3 huruf belakang. Contoh: Z1234AB)"
+                                            oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')"
+                                            value="{{ old('plat_nomor', Auth::user()->plat_nomor ?? '') }}" 
+                                            required>
                                     </div>
                                     @error('plat_nomor')
                                         <small class="text-danger mt-1 d-block">{{ $message }}</small>

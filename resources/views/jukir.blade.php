@@ -203,9 +203,16 @@
 
                         <div class="mb-3">
                             <label class="form-label text-muted small fw-semibold">Plat Nomor Kendaraan</label>
-                            <input type="text" name="plat_nomor" id="inputPlatNomor" 
-                                   class="form-control form-control-lg text-uppercase fw-bold rounded-3" 
-                                   placeholder="Contoh: Z 1234 AB" autocomplete="off" required>
+                            <input type="text" 
+                                name="plat_nomor" 
+                                class="form-control text-uppercase fw-bold rounded-3" 
+                                placeholder="Contoh: Z1234AB"
+                                maxlength="11"
+                                pattern="[A-Za-z]{1,2}\s?[1-9][0-9]{0,3}\s?[A-Za-z]{1,3}"
+                                title="Format plat nomor Indonesia yang valid (1-2 huruf depan, 1-4 angka, 1-3 huruf belakang. Contoh: Z1234AB)"
+                                oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')"
+                                value="{{ old('plat_nomor', Auth::user()->plat_nomor ?? '') }}" 
+                                required>
                         </div>
 
                         <div class="row g-2 mb-3">

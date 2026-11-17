@@ -17,8 +17,15 @@ class SistemController extends Controller
             'name'            => 'required|string|max:255',
             'email'           => 'required|string|email|max:255|unique:users',
             'password'        => 'required|string|min:6|confirmed',
-            'plat_nomor'      => 'required|string|max:15',
+            'plat_nomor'      => [
+                'required',
+                'string',
+                'max:12',
+                'regex:/^[A-Za-z]{1,2}\s?[1-9][0-9]{0,3}\s?[A-Za-z]{1,3}$/'
+            ],
             'jenis_kendaraan' => 'required|in:MOTOR,MOBIL',
+        ], [
+            'plat_nomor.regex' => 'Format plat nomor tidak valid! Gunakan format standar Indonesia (Contoh: Z1234AB).'
         ]);
 
         $platFormatted = strtoupper(str_replace(' ', '', trim($request->plat_nomor)));

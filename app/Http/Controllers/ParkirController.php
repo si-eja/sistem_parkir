@@ -57,8 +57,15 @@ class ParkirController extends Controller
     public function updateProfile(Request $request)
     {
         $request->validate([
-            'plat_nomor'      => 'required|string|max:15',
+            'plat_nomor'      => [
+                'required',
+                'string',
+                'max:12',
+                'regex:/^[A-Za-z]{1,2}\s?[1-9][0-9]{0,3}\s?[A-Za-z]{1,3}$/'
+            ],
             'jenis_kendaraan' => 'required|in:Motor,Mobil,MOTOR,MOBIL',
+        ], [
+            'plat_nomor.regex' => 'Format plat nomor tidak valid! Gunakan format standar Indonesia (Contoh: Z1234AB).'
         ]);
 
         /** @var \App\Models\User $user */
@@ -84,9 +91,16 @@ class ParkirController extends Controller
         $request->validate([
             'area_id'         => 'required|exists:areas,id',
             'qr_code_token'   => 'nullable|string',
-            'plat_nomor'      => 'nullable|string|max:20',
+            'plat_nomor'      => [
+                'required',
+                'string',
+                'max:12',
+                'regex:/^[A-Za-z]{1,2}\s?[1-9][0-9]{0,3}\s?[A-Za-z]{1,3}$/'
+            ],
             'jenis_kendaraan' => 'nullable|in:MOTOR,MOBIL',
             'nomor_slot'      => 'nullable|integer|min:1',
+        ],[
+            'plat_nomor.regex' => 'Format plat nomor tidak valid! Contoh yang benar: Z1234AB.'
         ]);
 
         // =========================================================================
