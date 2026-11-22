@@ -51,6 +51,11 @@
         border-color: #86efac;
         color: #005a32;
     }
+    .slot-box.kosong-dosen {
+        background-color: #ffffff;
+        border-color: #facc15;
+        color: #854d0e;
+    }
     .slot-box.terisi {
         background-color: #fef2f2;
         border-color: #fca5a5;
@@ -76,6 +81,7 @@
     $jumlahMotor = $kendaraan_aktif->where('jenis_kendaraan', 'MOTOR')->count();
     $jumlahMobil = $kendaraan_aktif->where('jenis_kendaraan', 'MOBIL')->count();
     $mapSlotTerisi = $kendaraan_aktif->keyBy('nomor_slot');
+    $batasDosen = (int) ($area->kapasitas_dosen ?? 0);
 @endphp
 
 <div class="container-fluid p-0" data-aos="fade-up">
@@ -137,12 +143,12 @@
         </div>
     </div>
 
-    <!-- 3. VISUAL DENAH GRID SLOT LAPANGAN INTERAKTIF -->
+    <!-- 3. VISUAL DENAH GRID SLOT LAPANGAN INTERAKTIF (TERPISAH DOSEN & UMUM) -->
     <div class="dash-card mb-4" style="border-top: 4px solid var(--unsil-green);">
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 pb-3 border-bottom">
             <div>
                 <h5 class="fw-bold text-dark mb-0">Denah Virtual Slot ({{ $area->kode_area }})</h5>
-                <small class="text-muted">Hijau = Kosong siap ditempati | Merah = Sedang terisi kendaraan</small>
+                <small class="text-muted">Emas = Khusus Dosen | Hijau = Umum Kosong | Merah = Sedang Terisi</small>
             </div>
 
             <!-- Filter Cepat Status & Pencarian Slot/Plat -->
@@ -156,35 +162,88 @@
             </div>
         </div>
 
-        <!-- KOTAK GRID SLOT -->
-        <div class="row g-2" id="gridSlotContainer">
-            @for($i = 1; $i <= $area->kapasitas_total; $i++)
-                @php
-                    $dataParkir = $mapSlotTerisi->get($i);
-                    $isTerisi = !is_null($dataParkir);
-                    $kodeSlot = $area->kode_area . str_pad($i, 3, '0', STR_PAD_LEFT);
-                @endphp
+        <div id="gridSlotContainer">
+            <!-- ZONA 1: KHUSUS DOSEN -->
+            @if($batasDosen > 0)
+                <div class="p-3 rounded-4 border mb-4" style="background-color: #fefce8; border-color: #fde047 !important;">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                        <span class="badge bg-dark text-warning px-3 py-1.5 rounded-pill">
+                            <i class="bi bi-star-fill me-1"></i> ZONA KHUSUS DOSEN ({{ $area->kode_area }}001 — {{ $area->kode_area . str_pad($batasDosen, 3, '0', STR_PAD_LEFT) }})
+                        </span>
+                        <small class="text-dark fw-semibold">Alokasi Prioritas: {{ $batasDosen }} Slot</small>
+                    </div>
 
-                <div class="col-4 col-sm-3 col-md-2 col-lg-1 slot-item"
-                     data-status="{{ $isTerisi ? 'TERISI' : 'KOSONG' }}"
-                     data-search="{{ strtolower($kodeSlot . ' ' . ($isTerisi ? $dataParkir->plat_nomor : '')) }}">
-                    
-                    <div class="slot-box {{ $isTerisi ? 'terisi' : 'kosong' }}"
-                         onclick="openSlotDetailModal(
-                             '{{ $kodeSlot }}',
-                             {{ $isTerisi ? 'true' : 'false' }},
-                             '{{ $isTerisi ? $dataParkir->plat_nomor : '' }}',
-                             '{{ $isTerisi ? ($dataParkir->jenis_kendaraan ?? 'MOTOR') : '' }}',
-                             '{{ $isTerisi ? \Carbon\Carbon::parse($dataParkir->created_at)->format('H:i') . ' WIB' : '' }}',
-                             '{{ $isTerisi ? route('parkir.checkout', $dataParkir->id) : route('jukir.dashboard', ['area_id' => $area->id]) }}'
-                         )">
-                        <div class="fw-bold small">{{ $kodeSlot }}</div>
-                        <div class="text-truncate" style="font-size: 0.68rem;">
-                            {{ $isTerisi ? $dataParkir->plat_nomor : 'Kosong' }}
-                        </div>
+                    <div class="row g-2">
+                        @for($i = 1; $i <= min($batasDosen, $area->kapasitas_total); $i++)
+                            @php
+                                $dataParkir = $mapSlotTerisi->get($i);
+                                $isTerisi = !is_null($dataParkir);
+                                $kodeSlot = $area->kode_area . str_pad($i, 3, '0', STR_PAD_LEFT);
+                            @endphp
+
+                            <div class="col-4 col-sm-3 col-md-2 col-lg-1 slot-item"
+                                 data-status="{{ $isTerisi ? 'TERISI' : 'KOSONG' }}"
+                                 data-search="{{ strtolower($kodeSlot . ' dosen ' . ($isTerisi ? $dataParkir->plat_nomor : '')) }}">
+                                
+                                <div class="slot-box {{ $isTerisi ? 'terisi' : 'kosong-dosen' }}"
+                                     onclick="openSlotDetailModal(
+                                         '{{ $kodeSlot }} (Dosen)',
+                                         {{ $isTerisi ? 'true' : 'false' }},
+                                         '{{ $isTerisi ? $dataParkir->plat_nomor : '' }}',
+                                         '{{ $isTerisi ? ($dataParkir->jenis_kendaraan ?? 'MOTOR') : '' }}',
+                                         '{{ $isTerisi ? \Carbon\Carbon::parse($dataParkir->created_at)->format('H:i') . ' WIB' : '' }}',
+                                         '{{ $isTerisi ? route('parkir.checkout', $dataParkir->id) : route('jukir.dashboard', ['area_id' => $area->id]) }}'
+                                     )">
+                                    <div class="fw-bold small">{{ $kodeSlot }}</div>
+                                    <div class="text-truncate" style="font-size: 0.68rem;">
+                                        {{ $isTerisi ? $dataParkir->plat_nomor : 'Dosen' }}
+                                    </div>
+                                </div>
+                            </div>
+                        @endfor
                     </div>
                 </div>
-            @endfor
+            @endif
+
+            <!-- ZONA 2: MAHASISWA & UMUM -->
+            <div>
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                    <span class="badge px-3 py-1.5 rounded-pill" style="background-color: var(--unsil-green-light); color: var(--unsil-green);">
+                        <i class="bi bi-mortarboard-fill me-1"></i> ZONA MAHASISWA & UMUM ({{ $area->kode_area . str_pad($batasDosen + 1, 3, '0', STR_PAD_LEFT) }} — {{ $area->kode_area . str_pad($area->kapasitas_total, 3, '0', STR_PAD_LEFT) }})
+                    </span>
+                    <small class="text-muted fw-semibold">Alokasi Reguler: {{ max(0, $area->kapasitas_total - $batasDosen) }} Slot</small>
+                </div>
+
+                <div class="row g-2">
+                    @for($i = $batasDosen + 1; $i <= $area->kapasitas_total; $i++)
+                        @php
+                            $dataParkir = $mapSlotTerisi->get($i);
+                            $isTerisi = !is_null($dataParkir);
+                            $kodeSlot = $area->kode_area . str_pad($i, 3, '0', STR_PAD_LEFT);
+                        @endphp
+
+                        <div class="col-4 col-sm-3 col-md-2 col-lg-1 slot-item"
+                             data-status="{{ $isTerisi ? 'TERISI' : 'KOSONG' }}"
+                             data-search="{{ strtolower($kodeSlot . ' ' . ($isTerisi ? $dataParkir->plat_nomor : '')) }}">
+                            
+                            <div class="slot-box {{ $isTerisi ? 'terisi' : 'kosong' }}"
+                                 onclick="openSlotDetailModal(
+                                     '{{ $kodeSlot }}',
+                                     {{ $isTerisi ? 'true' : 'false' }},
+                                     '{{ $isTerisi ? $dataParkir->plat_nomor : '' }}',
+                                     '{{ $isTerisi ? ($dataParkir->jenis_kendaraan ?? 'MOTOR') : '' }}',
+                                     '{{ $isTerisi ? \Carbon\Carbon::parse($dataParkir->created_at)->format('H:i') . ' WIB' : '' }}',
+                                     '{{ $isTerisi ? route('parkir.checkout', $dataParkir->id) : route('jukir.dashboard', ['area_id' => $area->id]) }}'
+                                 )">
+                                <div class="fw-bold small">{{ $kodeSlot }}</div>
+                                <div class="text-truncate" style="font-size: 0.68rem;">
+                                    {{ $isTerisi ? $dataParkir->plat_nomor : 'Kosong' }}
+                                </div>
+                            </div>
+                        </div>
+                    @endfor
+                </div>
+            </div>
         </div>
     </div>
 

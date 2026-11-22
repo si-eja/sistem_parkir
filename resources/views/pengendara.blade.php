@@ -94,6 +94,15 @@
 @endsection
 
 @section('content')
+@php
+    $profil = $pengendara ?? Auth::user()->pengendara;
+    $qrToken = $profil?->qr_code_token ?? 'PARKIR-' . Auth::id();
+    $platNomor = $profil?->plat_nomor ?? 'BELUM SET';
+    $jenisKendaraan = $profil?->jenis_kendaraan ?? 'MOTOR';
+    $kategori = strtoupper($profil?->kategori ?? 'MAHASISWA');
+    $nomorIdentitas = $profil?->nomor_identitas ?? null;
+@endphp
+
 <div class="container py-4">
 
     <!-- ==================== BARIS 1: KARTU QR (KIRI) & RIWAYAT PARKIR (KANAN) ==================== -->
@@ -113,20 +122,29 @@
                     </div>
 
                     <h5 class="fw-bold text-dark mb-1">{{ Auth::user()->name }}</h5>
-                    <p class="text-muted small mb-3">{{ Auth::user()->email }}</p>
+                    <div class="d-flex align-items-center justify-content-center gap-2 mb-3">
+                        <span class="badge {{ $kategori === 'DOSEN' ? 'bg-dark text-warning' : 'badge-unsil-green' }} px-2.5 py-1 rounded-pill" style="font-size: 0.72rem;">
+                            <i class="bi {{ $kategori === 'DOSEN' ? 'bi-person-workspace' : 'bi-mortarboard-fill' }} me-1"></i> {{ $kategori }}
+                        </span>
+                        @if($nomorIdentitas)
+                            <small class="text-muted font-monospace">{{ $nomorIdentitas }}</small>
+                        @else
+                            <small class="text-muted">{{ Auth::user()->email }}</small>
+                        @endif
+                    </div>
 
                     <!-- KOTAK QR CODE -->
                     <div class="rounded-4 p-4 d-flex flex-column align-items-center justify-content-center border shadow-sm my-3" 
                          style="background-color: #f8faf9; border-color: #d1e2d8 !important;">
                         <img id="qrImageDisplay"
-                             src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={{ Auth::user()->qr_code_token ?? 'PARKIR-'.Auth::id() }}" 
+                             src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={{ $qrToken }}" 
                              alt="QR Identitas {{ Auth::user()->name }}" 
                              class="img-fluid rounded-3 border p-2 bg-white shadow-sm"
                              style="width: 185px; height: 185px; object-fit: contain; border-color: var(--unsil-green) !important;">
                         
                         <span class="badge font-monospace mt-3 px-3 py-2 rounded-3" 
                               style="background-color: var(--unsil-green-dark); color: var(--unsil-yellow); letter-spacing: 0.05em;">
-                            {{ Auth::user()->qr_code_token ?? 'PARKIR-'.Auth::id() }}
+                            {{ $qrToken }}
                         </span>
 
                         <!-- TOMBOL DOWNLOAD & CETAK KARTU QR -->
@@ -145,11 +163,15 @@
                     <div class="bg-unsil-soft bg-opacity-50 rounded-3 p-3 text-start border border-success border-opacity-10 small mb-2">
                         <div class="d-flex justify-content-between mb-2 pb-2 border-bottom border-success border-opacity-10">
                             <span class="text-muted">Plat Nomor Kendaraan:</span>
-                            <strong class="text-unsil fs-6 text-uppercase">{{ Auth::user()->plat_nomor ?? 'BELUM SET' }}</strong>
+                            <strong class="text-unsil fs-6 text-uppercase">{{ $platNomor }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 pb-2 border-bottom border-success border-opacity-10">
+                            <span class="text-muted">Jenis Kendaraan:</span>
+                            <strong class="text-dark text-uppercase">{{ $jenisKendaraan }}</strong>
                         </div>
                         <div class="d-flex justify-content-between">
-                            <span class="text-muted">Jenis Kendaraan:</span>
-                            <strong class="text-dark text-uppercase">{{ Auth::user()->jenis_kendaraan ?? 'Motor' }}</strong>
+                            <span class="text-muted">Hak Akses Area:</span>
+                            <strong class="text-dark">{{ $kategori === 'DOSEN' ? 'Area Umum & Khusus Dosen' : 'Area Umum Mahasiswa' }}</strong>
                         </div>
                     </div>
                 </div>
@@ -322,13 +344,21 @@
                         @endphp
 
                         <div class="col-md-6 col-lg-4">
-                            <div class="area-info-item h-100 d-flex flex-column justify-content-between">
+                            <div class="area-info-item h-100 d-flex flex-column justify-content-between"
+                                 style="{{ !empty($item->khusus_dosen) && $item->khusus_dosen ? 'border-color: #eab308; background-color: #fefce8;' : '' }}">
                                 <div>
                                     <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
-                                        <span class="badge px-2.5 py-1 rounded-3 small fw-bold" 
-                                              style="background-color: var(--unsil-green); color: var(--unsil-yellow);">
-                                            {{ $item->kode_area }}
-                                        </span>
+                                        <div class="d-flex flex-wrap align-items-center gap-1">
+                                            <span class="badge px-2.5 py-1 rounded-3 small fw-bold" 
+                                                  style="background-color: var(--unsil-green); color: var(--unsil-yellow);">
+                                                {{ $item->kode_area }}
+                                            </span>
+                                            @if(!empty($item->khusus_dosen) && $item->khusus_dosen)
+                                                <span class="badge bg-dark text-warning px-2 py-1 rounded-3" style="font-size: 0.68rem;">
+                                                    <i class="bi bi-star-fill me-1"></i> KHUSUS DOSEN
+                                                </span>
+                                            @endif
+                                        </div>
                                         <span class="badge {{ $statusBadge }} px-2.5 py-1 rounded-pill" style="font-size: 0.7rem;">
                                             {{ $statusText }}
                                         </span>
@@ -387,14 +417,14 @@
                             pattern="[A-Za-z]{1,2}\s?[1-9][0-9]{0,3}\s?[A-Za-z]{1,3}"
                             title="Format plat nomor Indonesia yang valid (1-2 huruf depan, 1-4 angka, 1-3 huruf belakang. Contoh: Z1234AB)"
                             oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')"
-                            value="{{ old('plat_nomor', Auth::user()->plat_nomor ?? '') }}" 
+                            value="{{ old('plat_nomor', $profil?->plat_nomor ?? '') }}" 
                             required>
                     </div>
                     <div class="mb-2">
                         <label class="form-label small text-muted fw-semibold">Jenis Kendaraan</label>
                         <select name="jenis_kendaraan" class="form-select rounded-3 fw-semibold">
-                            <option value="MOTOR" {{ strtoupper(Auth::user()->jenis_kendaraan) == 'MOTOR' ? 'selected' : '' }}>Motor</option>
-                            <option value="MOBIL" {{ strtoupper(Auth::user()->jenis_kendaraan) == 'MOBIL' ? 'selected' : '' }}>Mobil</option>
+                            <option value="MOTOR" {{ strtoupper($jenisKendaraan) == 'MOTOR' ? 'selected' : '' }}>Motor</option>
+                            <option value="MOBIL" {{ strtoupper($jenisKendaraan) == 'MOBIL' ? 'selected' : '' }}>Mobil</option>
                         </select>
                     </div>
                 </div>
@@ -406,13 +436,15 @@
         </div>
     </div>
 </div>
+
 <script>
     const qrData = {
-        token: @json(Auth::user()->qr_code_token ?? 'PARKIR-' . Auth::id()),
+        token: @json($qrToken),
         nama: @json(Auth::user()->name),
-        plat: @json(strtoupper(Auth::user()->plat_nomor ?? 'BELUM SET')),
-        jenis: @json(strtoupper(Auth::user()->jenis_kendaraan ?? 'MOTOR')),
-        qrUrl: "https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=10&data=" + encodeURIComponent(@json(Auth::user()->qr_code_token ?? 'PARKIR-' . Auth::id()))
+        kategori: @json($kategori),
+        plat: @json(strtoupper($platNomor)),
+        jenis: @json(strtoupper($jenisKendaraan)),
+        qrUrl: "https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=10&data=" + encodeURIComponent(@json($qrToken))
     };
 
     // 1. FUNGSI DOWNLOAD KARTU QR SEBAGAI FILE PNG
@@ -422,10 +454,10 @@
             const blob = await response.blob();
             const imgBitmap = await createImageBitmap(blob);
 
-            // Buat Canvas Kartu Parkir UNSIL (600 x 820 px)
+            // Buat Canvas Kartu Parkir UNSIL (600 x 840 px)
             const canvas = document.createElement('canvas');
             canvas.width = 600;
-            canvas.height = 820;
+            canvas.height = 840;
             const ctx = canvas.getContext('2d');
 
             // Background Kartu Putih
@@ -448,7 +480,7 @@
 
             ctx.fillStyle = '#bbf7d0';
             ctx.font = '18px sans-serif';
-            ctx.fillText('KARTU AKSES PARKIR DIGITAL', canvas.width / 2, 102);
+            ctx.fillText('KARTU AKSES PARKIR DIGITAL (' + qrData.kategori + ')', canvas.width / 2, 102);
 
             // Gambar QR Code di Tengah
             const qrSize = 360;
@@ -475,7 +507,7 @@
             // Footer kecil
             ctx.fillStyle = '#64748b';
             ctx.font = '15px sans-serif';
-            ctx.fillText('Pindai QR ini pada petugas jukir saat masuk & keluar area kampus', canvas.width / 2, 775);
+            ctx.fillText('Pindai QR ini pada petugas jukir saat masuk & keluar area kampus', canvas.width / 2, 785);
 
             // Border luar kartu
             ctx.strokeStyle = '#005a32';
@@ -488,7 +520,6 @@
             link.href = canvas.toDataURL('image/png');
             link.click();
         } catch (err) {
-            // Fallback jika jaringan memblokir fetch blob: buka langsung gambar QR
             window.open(qrData.qrUrl, '_blank');
         }
     }
@@ -558,8 +589,18 @@
                         padding: 6px 14px;
                         border-radius: 8px;
                     }
+                    .badge-kat {
+                        display: inline-block;
+                        margin-top: 10px;
+                        background: #fef9c3;
+                        color: #854d0e;
+                        font-size: 11px;
+                        font-weight: 700;
+                        padding: 3px 10px;
+                        border-radius: 99px;
+                    }
                     .nama {
-                        margin: 14px 0 4px;
+                        margin: 8px 0 4px;
                         font-size: 17px;
                         font-weight: 700;
                         color: #0f172a;
@@ -592,6 +633,7 @@
                     <div class="body">
                         <img src="${qrData.qrUrl}" class="qr-img" onload="setTimeout(() => { window.print(); window.close(); }, 300);">
                         <div><span class="token">${qrData.token}</span></div>
+                        <div><span class="badge-kat">${qrData.kategori}</span></div>
                         <div class="nama">${qrData.nama}</div>
                         <div class="plat">${qrData.plat} &bull; ${qrData.jenis}</div>
                     </div>

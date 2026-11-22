@@ -109,7 +109,7 @@ class Page extends Controller
             return redirect()->route('jukir.dashboard')->with('success', 'Selamat Bertugas Jukir!');
         }
         
-        return redirect()->route('pengendara.dashboard')->with('success', 'Selamat Datang ' . $user->name . '!');
+        return redirect()->route('landing')->with('success', 'Selamat Datang ' . $user->name . '!');
     }
 
     public function petugas()

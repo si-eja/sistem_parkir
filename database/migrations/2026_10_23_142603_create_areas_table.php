@@ -6,23 +6,15 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('areas', function (Blueprint $table) {
-            $table->id();
-            $table->string('nama_area');       // Contoh: "Fakultas Teknik"
-            $table->string('kode_area');       // Contoh: "FT", "FEB", "FKIP" (Digunakan untuk prefix slot: FT001)
-            $table->integer('kapasitas_total')->default(100); // Admin bisa ubah misal dari 100 ke 200 tanpa ubah struktur DB
-            $table->timestamps();
+            $table->id();$table->string('nama_area');
+            $table->string('kode_area');$table->integer('kapasitas_total')->default(100);
+            $table->boolean('khusus_dosen')->default(false);$table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('areas');

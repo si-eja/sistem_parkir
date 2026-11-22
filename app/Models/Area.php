@@ -9,7 +9,17 @@ class Area extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'nama_area',
+        'kode_area',
+        'kapasitas_total',
+        'kapasitas_dosen',
+        'khusus_dosen', 
+    ];
+
+    protected $casts = [
+        'khusus_dosen' => 'boolean',
+    ];
 
     /**
      * Relasi ke seluruh riwayat parkir di area ini.

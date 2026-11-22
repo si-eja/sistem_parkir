@@ -36,20 +36,6 @@ class User extends Authenticatable
     }
 
     /**
-     * Boot function model: Auto-generate QR Code Token permanen saat akun baru dibuat.
-     */
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($user) {
-            if (empty($user->qr_code_token)) {
-                $user->qr_code_token = 'PARKIR-' . Str::upper(Str::random(10));
-            }
-        });
-    }
-
-    /**
      * Relasi ke seluruh riwayat transaksi parkir user ini.
      */
     public function parkir()
@@ -73,5 +59,10 @@ class User extends Authenticatable
     public function isPengendara(): bool
     {
         return $this->role === 'PENGENDARA';
+    }
+
+    public function pengendara()
+    {
+        return $this->hasOne(Pengendara::class, 'user_id');
     }
 }

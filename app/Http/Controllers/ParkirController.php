@@ -12,11 +12,14 @@ use Illuminate\Support\Str;
 
 class ParkirController extends Controller
 {
+
+    // Update Plat Nomor & Jenis Kendaraan
     // Dashboard Pengendara (Tampil QR Permanen, Riwayat & Info Slot Kampus)
     public function indexPengendara(Request $request)
     {
         $user = Auth::user();
-        $platUser = strtoupper(str_replace(' ', '', $user->plat_nomor ?? ''));
+        $pengendara = $user->pengendara;
+        $platUser = strtoupper(str_replace(' ', '', $pengendara->plat_nomor ?? ''));
 
         // 1. Ambil Parkir Aktif (Berdasarkan user_id ATAU plat_nomor)
         $parkir_aktif = Parkir::with('area')
@@ -47,40 +50,45 @@ class ParkirController extends Controller
             ->get();
 
         return view('pengendara', compact(
+            'pengendara',
             'parkir_aktif', 
             'semua_area', 
             'riwayat_terakhir'
         ));
     }
 
-    // Update Plat Nomor & Jenis Kendaraan
+    // Update Plat Nomor & Jenis Kendaraan di Tabel pengendaras
     public function updateProfile(Request $request)
     {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $pengendaraId = $user->pengendara->id ?? 'NULL';
+
         $request->validate([
-            'plat_nomor'      => [
+            'plat_nomor' => [
                 'required',
                 'string',
                 'max:12',
+                'unique:pengendaras,plat_nomor,' . $pengendaraId,
                 'regex:/^[A-Za-z]{1,2}\s?[1-9][0-9]{0,3}\s?[A-Za-z]{1,3}$/'
             ],
             'jenis_kendaraan' => 'required|in:Motor,Mobil,MOTOR,MOBIL',
         ], [
-            'plat_nomor.regex' => 'Format plat nomor tidak valid! Gunakan format standar Indonesia (Contoh: Z1234AB).'
+            'plat_nomor.regex'  => 'Format plat nomor tidak valid! Gunakan format standar Indonesia (Contoh: Z1234AB).',
+            'plat_nomor.unique' => 'Plat nomor ini sudah terdaftar pada akun pengendara lain.'
         ]);
 
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
-
-        // Standarisasi plat tanpa spasi & huruf kapital agar seragam dengan query pencarian
         $plat_clean      = strtoupper(str_replace(' ', '', trim($request->plat_nomor)));
         $jenis_kendaraan = strtoupper($request->jenis_kendaraan);
-        $newToken        = 'PARKIR-' . strtoupper(Str::random(10));
 
-        $user->update([
-            'plat_nomor'      => $plat_clean,
-            'jenis_kendaraan' => $jenis_kendaraan,
-            'qr_code_token'   => $user->qr_code_token ?? $newToken,
-        ]);
+        // Simpan ke tabel pengendaras (qr_code_token otomatis ter-generate oleh Model jika record baru)
+        $user->pengendara()->updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'plat_nomor'      => $plat_clean,
+                'jenis_kendaraan' => $jenis_kendaraan,
+            ]
+        );
 
         return redirect()->back()->with('success', 'Profil kendaraan & Plat Nomor berhasil diperbarui!');
     }
@@ -88,18 +96,19 @@ class ParkirController extends Controller
     // POS Jukir: Mode 1 Scan QR Universal (Masuk & Keluar) + Mode 2 Input Manual (Masuk)
     public function checkInJukir(Request $request)
     {
+        // 1. Validasi Umum
         $request->validate([
             'area_id'         => 'required|exists:areas,id',
             'qr_code_token'   => 'nullable|string',
             'plat_nomor'      => [
-                'required',
+                'nullable',
                 'string',
                 'max:12',
                 'regex:/^[A-Za-z]{1,2}\s?[1-9][0-9]{0,3}\s?[A-Za-z]{1,3}$/'
             ],
             'jenis_kendaraan' => 'nullable|in:MOTOR,MOBIL',
             'nomor_slot'      => 'nullable|integer|min:1',
-        ],[
+        ], [
             'plat_nomor.regex' => 'Format plat nomor tidak valid! Contoh yang benar: Z1234AB.'
         ]);
 
@@ -108,19 +117,23 @@ class ParkirController extends Controller
         // =========================================================================
         if ($request->filled('qr_code_token')) {
             $token = trim($request->qr_code_token);
-            $user = User::where('qr_code_token', $token)->first();
 
-            if (!$user) {
+            $pengendara = \App\Models\Pengendara::with('user')
+                ->where('qr_code_token', $token)
+                ->first();
+
+            if (!$pengendara || !$pengendara->user) {
                 return back()->with('error', 'Token QR tidak dikenali atau belum terdaftar!');
             }
 
-            // Cek apakah user sedang parkir AKTIF di area manapun
+            $user = $pengendara->user;
+
+            // Cek apakah pengendara sedang parkir AKTIF (Check-Out Universal tetap diizinkan di gerbang mana pun)
             $parkirAktif = Parkir::with('area')
                 ->where('user_id', $user->id)
                 ->where('status', 'AKTIF')
                 ->first();
 
-            // JIKA SUDAH AKTIF -> OTOMATIS CHECK-OUT UNIVERSAL
             if ($parkirAktif) {
                 $namaAreaAsal = $parkirAktif->area->nama_area ?? 'Area Kampus';
                 $parkirAktif->update([
@@ -128,17 +141,32 @@ class ParkirController extends Controller
                     'waktu_keluar' => Carbon::now('Asia/Jakarta'),
                 ]);
 
-                return back()->with('success', "Check-Out Universal Berhasil! {$user->name} ({$parkirAktif->plat_nomor}) keluar dari {$namaAreaAsal}.");
+                return back()->with('success', "Check-Out Universal Berhasil! {$user->name} ({$pengendara->kategori} - {$parkirAktif->plat_nomor}) keluar dari {$namaAreaAsal}.");
             }
 
-            // Validasi kelengkapan plat nomor pengendara sebelum Check-In
-            $platUser = strtoupper(str_replace(' ', '', trim($user->plat_nomor ?? '')));
+            // Validasi kelengkapan plat nomor sebelum Check-In
+            $platUser = strtoupper(str_replace(' ', '', trim($pengendara->plat_nomor ?? '')));
             if (empty($platUser) || $platUser === '-') {
                 return back()->with('error', "Pengendara {$user->name} belum mengatur Plat Nomor di profilnya!");
             }
 
-            // JIKA BELUM PARKIR -> OTOMATIS CHECK-IN KE AREA TUGAS SAAT INI
-            $area = Area::findOrFail($request->area_id);
+            $area            = Area::findOrFail($request->area_id);
+            $kategoriUser    = strtoupper($pengendara->kategori ?? 'MAHASISWA');
+            $isDosen         = ($kategoriUser === 'DOSEN');
+            $batasDosen      = (int) ($area->kapasitas_dosen ?? 0);
+            $isAreaFullDosen = (bool) $area->khusus_dosen || ($batasDosen > 0 && $batasDosen >= (int) $area->kapasitas_total);
+
+            // TOLAK JIKA AREA DIKUNCI KHUSUS DOSEN & YANG SCAN BUKAN DOSEN
+            if ($isAreaFullDosen && !$isDosen) {
+                return back()->with('error', "AKSES DITOLAK! {$area->nama_area} adalah area parkir khusus DOSEN. Akun {$user->name} terdaftar sebagai {$kategoriUser}.");
+            }
+
+            // TOLAK JIKA MAHASISWA DIPILIHKAN SLOT DI DALAM ZONA DOSEN
+            if (!$isDosen && $request->filled('nomor_slot') && (int) $request->nomor_slot <= $batasDosen) {
+                $kodeTarget = $area->kode_area . str_pad($request->nomor_slot, 3, '0', STR_PAD_LEFT);
+                return back()->with('error', "AKSES DITOLAK! Slot {$kodeTarget} berada di Zona Khusus Dosen.");
+            }
+
             $slotTerpakai = Parkir::where('area_id', $area->id)
                 ->where('status', 'AKTIF')
                 ->pluck('nomor_slot')
@@ -148,56 +176,103 @@ class ParkirController extends Controller
                 return back()->with('error', "Gagal Check-In! Lahan {$area->nama_area} sudah penuh.");
             }
 
-            $nomorSlot = 1;
-            while (in_array($nomorSlot, $slotTerpakai)) {
-                $nomorSlot++;
+            $nomorSlot = null;
+
+            if ($isDosen) {
+                // Dosen: Prioritas slot 1 s/d batasDosen, lalu lanjut ke slot umum jika zona dosen penuh
+                for ($i = 1; $i <= $area->kapasitas_total; $i++) {
+                    if (!in_array($i, $slotTerpakai)) {
+                        $nomorSlot = $i;
+                        break;
+                    }
+                }
+            } else {
+                // Mahasiswa: Hanya boleh masuk mulai slot batasDosen + 1 s/d kapasitas_total
+                for ($i = $batasDosen + 1; $i <= $area->kapasitas_total; $i++) {
+                    if (!in_array($i, $slotTerpakai)) {
+                        $nomorSlot = $i;
+                        break;
+                    }
+                }
+
+                // Jika slot umum habis sementara slot dosen masih kosong, tolak akses Mahasiswa
+                if (!$nomorSlot) {
+                    $akhirZonaDosen = $area->kode_area . str_pad($batasDosen, 3, '0', STR_PAD_LEFT);
+                    return back()->with('error', "AKSES DITOLAK! Kuota parkir Mahasiswa di {$area->nama_area} sudah penuh. Sisa slot ({$area->kode_area}001–{$akhirZonaDosen}) dikhususkan untuk DOSEN.");
+                }
             }
 
             Parkir::create([
                 'user_id'         => $user->id,
                 'area_id'         => $area->id,
                 'plat_nomor'      => $platUser,
-                'jenis_kendaraan' => strtoupper($user->jenis_kendaraan ?? 'MOTOR'),
+                'jenis_kendaraan' => strtoupper($pengendara->jenis_kendaraan ?? 'MOTOR'),
                 'nomor_slot'      => $nomorSlot,
                 'status'          => 'AKTIF',
                 'input_oleh'      => 'JUKIR',
             ]);
 
-            $kodeSlot = $area->kode_area . str_pad($nomorSlot, 3, '0', STR_PAD_LEFT);
-            return back()->with('success', "Check-In QR Berhasil! {$user->name} ({$platUser}) masuk ke Slot {$kodeSlot}.");
+            $kodeSlot  = $area->kode_area . str_pad($nomorSlot, 3, '0', STR_PAD_LEFT);
+            $zonaLabel = ($nomorSlot <= $batasDosen) ? 'Zona Khusus Dosen' : 'Zona Umum';
+
+            return back()->with('success', "Check-In QR Berhasil! {$user->name} [{$kategoriUser}] ({$platUser}) masuk ke Slot {$kodeSlot} ({$zonaLabel}).");
         }
 
         // =========================================================================
         // MODE 2: INPUT MANUAL (KHUSUS CHECK-IN KENDARAAN NON-AKUN / TAMU)
         // =========================================================================
         $request->validate([
-            'plat_nomor'      => 'required|string|max:20',
+            'plat_nomor' => [
+                'required',
+                'string',
+                'max:12',
+                'regex:/^[A-Za-z]{1,2}\s?[1-9][0-9]{0,3}\s?[A-Za-z]{1,3}$/'
+            ],
             'jenis_kendaraan' => 'required|in:MOTOR,MOBIL',
+        ], [
+            'plat_nomor.regex' => 'Format plat nomor tidak valid! Contoh yang benar: Z1234AB.'
         ]);
 
-        // Standarisasi plat nomor tanpa spasi
         $plat = strtoupper(str_replace(' ', '', trim($request->plat_nomor)));
 
-        // Cegah duplikasi check-in untuk plat yang sedang parkir aktif
         $cekPlatAktif = Parkir::where('plat_nomor', $plat)->where('status', 'AKTIF')->first();
         if ($cekPlatAktif) {
             return back()->with('error', "Kendaraan dengan plat {$plat} masih tercatat parkir aktif!");
         }
 
-        $area = Area::findOrFail($request->area_id);
-        $slotTerpakai = Parkir::where('area_id', $area->id)->where('status', 'AKTIF')->pluck('nomor_slot')->toArray();
+        $area            = Area::findOrFail($request->area_id);
+        $batasDosen      = (int) ($area->kapasitas_dosen ?? 0);
+        $isAreaFullDosen = (bool) $area->khusus_dosen || ($batasDosen > 0 && $batasDosen >= (int) $area->kapasitas_total);
 
-        if (count($slotTerpakai) >= $area->kapasitas_total) {
-            return back()->with('error', "Lahan {$area->nama_area} sudah penuh!");
+        if ($isAreaFullDosen) {
+            return back()->with('error', "AKSES DITOLAK! {$area->nama_area} adalah area parkir khusus DOSEN (Wajib Scan QR Dosen).");
         }
 
-        if ($request->filled('nomor_slot') && $request->nomor_slot <= $area->kapasitas_total && !in_array($request->nomor_slot, $slotTerpakai)) {
+        $slotTerpakai = Parkir::where('area_id', $area->id)
+            ->where('status', 'AKTIF')
+            ->pluck('nomor_slot')
+            ->toArray();
+
+        $nomorSlot = null;
+
+        if (
+            $request->filled('nomor_slot') &&
+            (int) $request->nomor_slot > $batasDosen &&
+            (int) $request->nomor_slot <= $area->kapasitas_total &&
+            !in_array((int) $request->nomor_slot, $slotTerpakai)
+        ) {
             $nomorSlot = (int) $request->nomor_slot;
         } else {
-            $nomorSlot = 1;
-            while (in_array($nomorSlot, $slotTerpakai)) {
-                $nomorSlot++;
+            for ($i = $batasDosen + 1; $i <= $area->kapasitas_total; $i++) {
+                if (!in_array($i, $slotTerpakai)) {
+                    $nomorSlot = $i;
+                    break;
+                }
             }
+        }
+
+        if (!$nomorSlot) {
+            return back()->with('error', "AKSES DITOLAK! Kuota parkir umum di {$area->nama_area} sudah penuh.");
         }
 
         Parkir::create([

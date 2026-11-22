@@ -13,7 +13,6 @@
         --unsil-red: #dc2626;
     }
 
-    /* Styling Visual Minimalis & Bento Card Nuansa UNSIL */
     body {
         background-color: #f4f7f5;
         color: #0f172a;
@@ -42,7 +41,6 @@
         border-radius: 1.25rem;
     }
 
-    /* Warna Kustom UNSIL */
     .text-unsil { color: var(--unsil-green) !important; }
     .bg-unsil { background-color: var(--unsil-green) !important; }
     .bg-unsil-soft { background-color: var(--unsil-green-light) !important; }
@@ -59,7 +57,6 @@
         border: 1px solid rgba(0, 90, 50, 0.2);
     }
 
-    /* Tombol Utama Hijau & Kuning UNSIL */
     .btn-unsil-primary {
         background-color: var(--unsil-green);
         border-color: var(--unsil-green);
@@ -84,7 +81,6 @@
         color: #000000;
     }
 
-    /* Step Badge Icon */
     .step-icon {
         width: 38px;
         height: 38px;
@@ -99,7 +95,6 @@
         box-shadow: 0 4px 10px rgba(0, 90, 50, 0.15);
     }
 
-    /* Grid Slotting Visual Mini */
     .slot-pill {
         font-size: 0.7rem;
         font-weight: 700;
@@ -113,13 +108,17 @@
         color: #065f46;
         border: 1px solid #a7f3d0;
     }
-    /* Sentuhan Merah Sangat Minimal untuk Slot Terisi */
+    .slot-kosong-dosen {
+        background-color: #fefce8;
+        color: #854d0e;
+        border: 1px solid #fde047;
+    }
     .slot-terisi {
         background-color: #fef2f2;
         color: #b91c1c;
         border: 1px solid #fecaca;
     }
-    /* SECTION WRAPPER HIJAU FULL-WIDTH DI BELAKANG CARD NAV */
+
     .area-nav-section-fluid {
         background: linear-gradient(135deg, #003d22 0%, #005a32 100%);
         border-top: 3px solid #facc15;
@@ -127,7 +126,6 @@
         padding: 2.25rem 0 2.5rem 0;
     }
 
-    /* SCROLLER HORIZONTAL CARD */
     .area-nav-scroller {
         display: flex;
         gap: 1rem;
@@ -142,7 +140,6 @@
         display: none;
     }
 
-    /* CARD NAV TEMPAT PARKIR (KONTRAS DI ATAS BACKGROUND HIJAU FLUID) */
     .area-nav-card {
         flex: 0 0 295px;
         scroll-snap-align: start;
@@ -171,14 +168,12 @@
         border-color: rgba(250, 204, 21, 0.8);
     }
 
-    /* State Aktif Saat Card Dipilih */
     .area-nav-card.active {
-        background-color: #fffbeb; /* Sentuhan putih-krem hangat agar menonjol */
+        background-color: #fffbeb;
         border: 3px solid #facc15;
         box-shadow: 0 12px 26px rgba(0, 0, 0, 0.32);
     }
 
-    /* Tinggi Judul Seragam Agar Kotak Kapasitas/Terisi/Tersisa Selalu Sejajar */
     .area-card-title-row {
         min-height: 46px;
         display: flex;
@@ -188,7 +183,6 @@
         margin-bottom: 0.85rem;
     }
 
-    /* Kotak Statistik Sejajar */
     .stat-mini-box {
         background-color: #f4f7f5;
         border: 1px solid #d1e2d8;
@@ -206,7 +200,6 @@
         border-color: #86efac;
     }
 
-    /* Tombol Panah Geser Kiri/Kanan di Header Hijau */
     .scroll-arrow-btn-light {
         width: 36px;
         height: 36px;
@@ -225,7 +218,6 @@
         border-color: #facc15;
     }
 
-    /* CONTAINER SLOT GRID DEFAULT PUTIH WEB */
     .slot-grid-container {
         background-color: #ffffff;
         border: 1px solid #d1e2d8;
@@ -238,7 +230,7 @@
 
 @section('content')
 
-<!-- HERO BANNER DENGAN LATAR BELAKANG KAMPUS 1 UNSIL & NUANSA HIJAU-KUNING -->
+<!-- HERO BANNER -->
 <div id="gambar-unsil" class="w-100 position-relative d-flex align-items-center mb-5 overflow-hidden shadow-sm" 
      style="min-height: 380px; border-bottom: 4px solid var(--unsil-yellow); background: linear-gradient(135deg, rgba(0, 61, 34, 0.88) 0%, rgba(0, 90, 50, 0.80) 100%), url('{{ asset('images/unsil.jpg') }}') center/cover no-repeat;">
     
@@ -258,6 +250,7 @@
         </div>
     </div>
 </div>
+
 <div class="container">
     <!-- BENTO GRID: CARD PENGENDARA & PANDUAN PETUNJUK -->
     <div class="row g-4 mb-5 align-items-stretch" data-aos="fade-up">
@@ -283,7 +276,7 @@
             </div>
         </div>
 
-        <!-- CARD PENGGANTI: ALUR & CARA PARKIR MANDIRI (KANAN) -->
+        <!-- CARD ALUR & CARA PARKIR MANDIRI (KANAN) -->
         <div class="col-lg-7 col-md-12">
             <div class="bento-card h-100 p-4 d-flex flex-column justify-content-between bg-white" style="border-top: 4px solid var(--unsil-yellow);">
                 <div>
@@ -293,10 +286,7 @@
                     </div>
                     <p class="text-muted small mb-4">Prosedur singkat penggunaan sistem E-Parkir mandiri di area Universitas Siliwangi.</p>
 
-                    <!-- LANGKAH-LANGKAH ALUR PARKIR -->
                     <div class="d-flex flex-column gap-3">
-                        
-                        <!-- Step 1 -->
                         <div class="d-flex align-items-start gap-3 p-3 rounded-3 bg-unsil-soft bg-opacity-50 border border-success border-opacity-10">
                             <div class="step-icon">1</div>
                             <div>
@@ -307,7 +297,6 @@
                             </div>
                         </div>
 
-                        <!-- Step 2 -->
                         <div class="d-flex align-items-start gap-3 p-3 rounded-3 bg-unsil-soft bg-opacity-50 border border-success border-opacity-10">
                             <div class="step-icon">2</div>
                             <div>
@@ -318,7 +307,6 @@
                             </div>
                         </div>
 
-                        <!-- Step 3 -->
                         <div class="d-flex align-items-start gap-3 p-3 rounded-3 bg-unsil-soft bg-opacity-50 border border-success border-opacity-10">
                             <div class="step-icon">3</div>
                             <div>
@@ -328,7 +316,6 @@
                                 </p>
                             </div>
                         </div>
-
                     </div>
                 </div>
 
@@ -340,13 +327,13 @@
         </div>
     </div>
 </div>
+
 <!-- VISUAL MONITORING GRID SLOT KOSONG / TERISI PER FAKULTAS -->
 <div class="mb-5" data-aos="fade-up" data-aos-delay="100" id="monitoringParkirSection">
     @if(isset($semua_area) && count($semua_area) > 0)
-        <!-- ==================== 1. SECTION NAVIGASI CARD (CONTAINER-FLUID BACKGROUND HIJAU) ==================== -->
-        <section class="area-nav-section-fluid mb-4" data-aos="fade-up" id="monitoringParkirSection">
+        <!-- ==================== 1. SECTION NAVIGASI CARD ==================== -->
+        <section class="area-nav-section-fluid mb-4" data-aos="fade-up">
             <div class="container">
-                <!-- Header Section di atas Background Hijau -->
                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
                     <div>
                         <h4 class="fw-bold text-white mb-1 d-flex align-items-center gap-2">
@@ -357,7 +344,6 @@
                         </p>
                     </div>
 
-                    <!-- Kontrol Geser Kiri/Kanan + Live Badge -->
                     <div class="d-flex align-items-center gap-2">
                         <span class="badge rounded-pill px-3 py-2 small fw-semibold d-none d-sm-inline-block" 
                             style="background-color: rgba(255,255,255,0.12); color: #bbf7d0; border: 1px solid rgba(255,255,255,0.2);">
@@ -372,150 +358,169 @@
                     </div>
                 </div>
 
-                @if(isset($semua_area) && count($semua_area) > 0)
-                    <!-- Baris Card Horizontal Geser Kiri-Kanan -->
-                    <div class="area-nav-scroller" id="areaNavScroller" role="tablist">
-                        @foreach($semua_area as $index => $areaItem)
-                            @php
-                                $terisi = $areaItem->parkir_aktif_count ?? 0;
-                                $sisaSlot = max(0, $areaItem->kapasitas_total - $terisi);
-                                $persentaseTerisi = $areaItem->kapasitas_total > 0 ? ($terisi / $areaItem->kapasitas_total) * 100 : 100;
-
-                                if ($sisaSlot <= 0) {
-                                    $badgeStatus = 'PENUH';
-                                    $badgeClass = 'bg-danger text-white';
-                                } elseif ($persentaseTerisi >= 80) {
-                                    $badgeStatus = 'HAMPIR PENUH';
-                                    $badgeClass = 'badge-unsil-yellow';
-                                } else {
-                                    $badgeStatus = 'TERSEDIA';
-                                    $badgeClass = 'badge-unsil-green';
-                                }
-                            @endphp
-
-                            <!-- CARD NAV ITEM -->
-                            <div class="area-nav-card {{ $index === 0 ? 'active' : '' }}"
-                                onclick="selectAreaTab(this, '#paneArea{{ $areaItem->id }}')">
-                                
-                                <!-- Baris Atas: Nama Tempat & Status (Tinggi Seragam) -->
-                                <div class="area-card-title-row">
-                                    <h6 class="fw-bold text-dark mb-0 lh-sm" style="font-size: 0.95rem;">
-                                        📍 {{ $areaItem->nama_area }}
-                                    </h6>
-                                    <span class="badge {{ $badgeClass }} rounded-pill px-2.5 py-1 flex-shrink-0" style="font-size: 0.65rem;">
-                                        {{ $badgeStatus }}
-                                    </span>
-                                </div>
-
-                                <!-- Baris Tengah: Kapasitas, Terisi, Tersisa (Selalu Sejajar Horizontal) -->
-                                <div class="row g-2 mb-3">
-                                    <div class="col-4">
-                                        <div class="stat-mini-box">
-                                            <small class="text-muted d-block" style="font-size: 0.68rem;">Kapasitas</small>
-                                            <strong class="text-dark fs-6">{{ $areaItem->kapasitas_total }}</strong>
-                                        </div>
-                                    </div>
-                                    <div class="col-4">
-                                        <div class="stat-mini-box">
-                                            <small class="text-muted d-block" style="font-size: 0.68rem;">Terisi</small>
-                                            <strong class="text-dark fs-6">{{ $terisi }}</strong>
-                                        </div>
-                                    </div>
-                                    <div class="col-4">
-                                        <div class="stat-mini-box highlight-sisa">
-                                            <small class="text-unsil fw-semibold d-block" style="font-size: 0.68rem;">Tersisa</small>
-                                            <strong class="text-unsil fs-6">{{ $sisaSlot }}</strong>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Baris Bawah: Button Parkir di Sini -->
-                                <button type="button"
-                                        class="btn {{ $sisaSlot <= 0 ? 'btn-secondary' : 'btn-unsil-yellow' }} btn-sm w-100 rounded-3 py-2 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm"
-                                        onclick="event.stopPropagation(); selectAreaTab(this.closest('.area-nav-card'), '#paneArea{{ $areaItem->id }}', true);">
-                                    <span>{{ $sisaSlot <= 0 ? 'Lahan Penuh (Lihat Grid)' : 'Parkir di Sini' }}</span>
-                                    <i class="bi bi-arrow-down-circle-fill"></i>
-                                </button>
-                            </div>
-                        @endforeach
-                    </div>
-                @endif
-            </div>
-        </section>
-
-        <!-- ==================== 2. KONTEN SLOT GRID REAL-TIME (BACKGROUND DEFAULT PUTIH WEB) ==================== -->
-        <div class="container mb-5" data-aos="fade-up" data-aos-delay="100">
-            @if(isset($semua_area) && count($semua_area) > 0)
-                <div class="slot-grid-container" id="slotGridDisplayBox">
+                <div class="area-nav-scroller" id="areaNavScroller" role="tablist">
                     @foreach($semua_area as $index => $areaItem)
                         @php
                             $terisi = $areaItem->parkir_aktif_count ?? 0;
                             $sisaSlot = max(0, $areaItem->kapasitas_total - $terisi);
-                            $slotTerpakai = $areaItem->parkir ? $areaItem->parkir->pluck('nomor_slot')->toArray() : [];
+                            $persentaseTerisi = $areaItem->kapasitas_total > 0 ? ($terisi / $areaItem->kapasitas_total) * 100 : 100;
+
+                            if ($sisaSlot <= 0) {
+                                $badgeStatus = 'PENUH';
+                                $badgeClass = 'bg-danger text-white';
+                            } elseif ($persentaseTerisi >= 80) {
+                                $badgeStatus = 'HAMPIR PENUH';
+                                $badgeClass = 'badge-unsil-yellow';
+                            } else {
+                                $badgeStatus = 'TERSEDIA';
+                                $badgeClass = 'badge-unsil-green';
+                            }
                         @endphp
 
-                        <div class="area-grid-pane {{ $index === 0 ? '' : 'd-none' }}" id="paneArea{{ $areaItem->id }}">
+                        <div class="area-nav-card {{ $index === 0 ? 'active' : '' }}"
+                            onclick="selectAreaTab(this, '#paneArea{{ $areaItem->id }}')">
                             
-                            <!-- Header Denah Area Terpilih -->
-                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pb-3 mb-3 border-bottom">
-                                <div>
-                                    <span class="badge badge-unsil-green rounded-pill px-3 py-1 mb-1">
-                                        Kode Area: {{ $areaItem->kode_area }}
-                                    </span>
-                                    <h5 class="fw-bold text-dark mb-0">
-                                        Denah Slot Parkir — {{ $areaItem->nama_area }}
-                                    </h5>
+                            <div class="area-card-title-row">
+                                <h6 class="fw-bold text-dark mb-0 lh-sm" style="font-size: 0.95rem;">
+                                    📍 {{ $areaItem->nama_area }}
+                                </h6>
+                                <span class="badge {{ $badgeClass }} rounded-pill px-2.5 py-1 flex-shrink-0" style="font-size: 0.65rem;">
+                                    {{ $badgeStatus }}
+                                </span>
+                            </div>
+
+                            <div class="row g-2 mb-3">
+                                <div class="col-4">
+                                    <div class="stat-mini-box">
+                                        <small class="text-muted d-block" style="font-size: 0.68rem;">Kapasitas</small>
+                                        <strong class="text-dark fs-6">{{ $areaItem->kapasitas_total }}</strong>
+                                    </div>
                                 </div>
-
-                                <div class="d-flex flex-wrap align-items-center gap-2">
-                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2.5 py-1.5 small">
-                                        🟢 Kosong ({{ $sisaSlot }})
-                                    </span>
-                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2.5 py-1.5 small">
-                                        🔴 Terisi ({{ $terisi }})
-                                    </span>
-
-                                    @if($sisaSlot > 0)
-                                        <a href="{{ route('pengendara.dashboard', ['area_id' => $areaItem->id]) }}" 
-                                        class="btn btn-unsil-primary btn-sm rounded-3 px-3 py-1.5 fw-semibold ms-1 shadow-sm">
-                                            <i class="bi bi-box-arrow-in-right text-warning me-1"></i> Check-In Area Ini
-                                        </a>
-                                    @endif
+                                <div class="col-4">
+                                    <div class="stat-mini-box">
+                                        <small class="text-muted d-block" style="font-size: 0.68rem;">Terisi</small>
+                                        <strong class="text-dark fs-6">{{ $terisi }}</strong>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="stat-mini-box highlight-sisa">
+                                        <small class="text-unsil fw-semibold d-block" style="font-size: 0.68rem;">Tersisa</small>
+                                        <strong class="text-unsil fs-6">{{ $sisaSlot }}</strong>
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- Grid Seluruh Nomor Slot (Background Putih Default Web) -->
-                            <div class="pe-1" style="max-height: 320px; overflow-y: auto;">
+                            <button type="button"
+                                    class="btn {{ $sisaSlot <= 0 ? 'btn-secondary' : 'btn-unsil-yellow' }} btn-sm w-100 rounded-3 py-2 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm"
+                                    onclick="event.stopPropagation(); selectAreaTab(this.closest('.area-nav-card'), '#paneArea{{ $areaItem->id }}', true);">
+                                <span>{{ $sisaSlot <= 0 ? 'Lahan Penuh (Lihat Grid)' : 'Parkir di Sini' }}</span>
+                                <i class="bi bi-arrow-down-circle-fill"></i>
+                            </button>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 2. KONTEN SLOT GRID REAL-TIME (ZONA DOSEN & ZONA UMUM) ==================== -->
+        <div class="container mb-5" data-aos="fade-up" data-aos-delay="100">
+            <div class="slot-grid-container" id="slotGridDisplayBox">
+                @foreach($semua_area as $index => $areaItem)
+                    @php
+                        $terisi = $areaItem->parkir_aktif_count ?? 0;
+                        $sisaSlot = max(0, $areaItem->kapasitas_total - $terisi);
+                        $slotTerpakai = $areaItem->parkir ? $areaItem->parkir->pluck('nomor_slot')->toArray() : [];
+                        $batasDosen = (int) ($areaItem->kapasitas_dosen ?? 0);
+                    @endphp
+
+                    <div class="area-grid-pane {{ $index === 0 ? '' : 'd-none' }}" id="paneArea{{ $areaItem->id }}">
+                        
+                        <!-- Header Denah Area Terpilih -->
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pb-3 mb-3 border-bottom">
+                            <div>
+                                <span class="badge badge-unsil-green rounded-pill px-3 py-1 mb-1">
+                                    Kode Area: {{ $areaItem->kode_area }}
+                                </span>
+                                <h5 class="fw-bold text-dark mb-0">
+                                    Denah Slot Parkir — {{ $areaItem->nama_area }}
+                                </h5>
+                            </div>
+
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2.5 py-1.5 small">
+                                    🟢 Kosong ({{ $sisaSlot }})
+                                </span>
+                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2.5 py-1.5 small">
+                                    🔴 Terisi ({{ $terisi }})
+                                </span>
+
+                                @if($sisaSlot > 0)
+                                    <a href="{{ route('pengendara.dashboard', ['area_id' => $areaItem->id]) }}" 
+                                       class="btn btn-unsil-primary btn-sm rounded-3 px-3 py-1.5 fw-semibold ms-1 shadow-sm">
+                                        <i class="bi bi-box-arrow-in-right text-warning me-1"></i> Check-In Area Ini
+                                    </a>
+                                @endif
+                            </div>
+                        </div>
+
+                        <!-- Grid Terpisah: Zona Dosen & Zona Mahasiswa/Umum -->
+                        <div class="pe-1" style="max-height: 380px; overflow-y: auto;">
+                            @if($batasDosen > 0)
+                                <div class="p-3 rounded-3 border mb-3" style="background-color: #fefce8; border-color: #fde047 !important;">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="badge bg-dark text-warning px-2.5 py-1 rounded-pill" style="font-size: 0.7rem;">
+                                            <i class="bi bi-star-fill me-1"></i> ZONA KHUSUS DOSEN ({{ $areaItem->kode_area }}001 — {{ $areaItem->kode_area . str_pad($batasDosen, 3, '0', STR_PAD_LEFT) }})
+                                        </span>
+                                        <small class="text-muted fw-semibold" style="font-size: 0.72rem;">{{ $batasDosen }} Slot</small>
+                                    </div>
+                                    <div class="row g-2">
+                                        @for($i = 1; $i <= min($batasDosen, $areaItem->kapasitas_total); $i++)
+                                            @php
+                                                $isSlotTerisi = in_array($i, $slotTerpakai);
+                                                $kodeSlot = $areaItem->kode_area . str_pad($i, 3, '0', STR_PAD_LEFT);
+                                            @endphp
+                                            <div class="col-4 col-sm-3 col-md-2 col-lg-1">
+                                                <div class="slot-pill {{ $isSlotTerisi ? 'slot-terisi' : 'slot-kosong-dosen' }}" 
+                                                     title="Slot {{ $kodeSlot }} (Khusus Dosen): {{ $isSlotTerisi ? 'Terisi' : 'Kosong' }}">
+                                                    {{ $kodeSlot }}
+                                                </div>
+                                            </div>
+                                        @endfor
+                                    </div>
+                                </div>
+                            @endif
+
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="badge badge-unsil-green px-2.5 py-1 rounded-pill" style="font-size: 0.7rem;">
+                                        <i class="bi bi-mortarboard-fill me-1"></i> ZONA MAHASISWA & UMUM ({{ $areaItem->kode_area . str_pad($batasDosen + 1, 3, '0', STR_PAD_LEFT) }} — {{ $areaItem->kode_area . str_pad($areaItem->kapasitas_total, 3, '0', STR_PAD_LEFT) }})
+                                    </span>
+                                    <small class="text-muted fw-semibold" style="font-size: 0.72rem;">{{ max(0, $areaItem->kapasitas_total - $batasDosen) }} Slot</small>
+                                </div>
                                 <div class="row g-2">
-                                    @for($i = 1; $i <= $areaItem->kapasitas_total; $i++)
+                                    @for($i = $batasDosen + 1; $i <= $areaItem->kapasitas_total; $i++)
                                         @php
                                             $isSlotTerisi = in_array($i, $slotTerpakai);
                                             $kodeSlot = $areaItem->kode_area . str_pad($i, 3, '0', STR_PAD_LEFT);
                                         @endphp
                                         <div class="col-4 col-sm-3 col-md-2 col-lg-1">
                                             <div class="slot-pill {{ $isSlotTerisi ? 'slot-terisi' : 'slot-kosong' }}" 
-                                                title="Slot {{ $kodeSlot }}: {{ $isSlotTerisi ? 'Terisi' : 'Kosong' }}">
+                                                 title="Slot {{ $kodeSlot }} (Umum): {{ $isSlotTerisi ? 'Terisi' : 'Kosong' }}">
                                                 {{ $kodeSlot }}
                                             </div>
                                         </div>
                                     @endfor
                                 </div>
                             </div>
-
-                            <small class="text-muted d-block mt-3 text-center" style="font-size: 0.72rem;">
-                                *Menampilkan seluruh {{ $areaItem->kapasitas_total }} slot parkir pada <strong>{{ $areaItem->nama_area }}</strong> secara real-time.
-                            </small>
                         </div>
-                    @endforeach
-                </div>
-            @else
-                <div class="alert border rounded-4 p-4 text-center shadow-sm" style="background-color: #e6f4ea; color: #005a32; border-color: #bbf7d0 !important;">
-                    <i class="bi bi-info-circle-fill fs-4 d-block mb-1"></i>
-                    <h6 class="fw-bold mb-0">Data Area Parkir Belum Dimuat</h6>
-                </div>
-            @endif
-        </div>
 
+                        <small class="text-muted d-block mt-3 text-center" style="font-size: 0.72rem;">
+                            *Menampilkan seluruh {{ $areaItem->kapasitas_total }} slot parkir pada <strong>{{ $areaItem->nama_area }}</strong> ({{ $batasDosen }} Slot Dosen &bull; {{ max(0, $areaItem->kapasitas_total - $batasDosen) }} Slot Umum).
+                        </small>
+                    </div>
+                @endforeach
+            </div>
+        </div>
     @else
         <div class="alert border rounded-4 p-4 text-center shadow-sm" style="background-color: #e6f4ea; color: #005a32; border-color: #bbf7d0 !important;">
             <i class="bi bi-info-circle-fill fs-4 d-block mb-1"></i>
@@ -523,30 +528,22 @@
         </div>
     @endif
 </div>
+
 <script>
-    // Fungsi memilih Tab Card Area & menampilkan Grid Slot di bawahnya
     function selectAreaTab(cardElement, targetPaneSelector, scrollToGrid = false) {
-        // 1. Hapus class active dari semua card nav
         document.querySelectorAll('.area-nav-card').forEach(card => {
             card.classList.remove('active');
         });
-
-        // 2. Tambahkan class active pada card yang diklik
         if (cardElement) {
             cardElement.classList.add('active');
         }
-
-        // 3. Sembunyikan semua panel grid, lalu tampilkan panel area terpilih
         document.querySelectorAll('.area-grid-pane').forEach(pane => {
             pane.classList.add('d-none');
         });
-
         const activePane = document.querySelector(targetPaneSelector);
         if (activePane) {
             activePane.classList.remove('d-none');
         }
-
-        // 4. Jika tombol "Parkir di Sini" diklik, gulir halus ke kotak slot grid di bawahnya
         if (scrollToGrid) {
             const gridBox = document.getElementById('slotGridDisplayBox');
             if (gridBox) {
@@ -555,7 +552,6 @@
         }
     }
 
-    // Kontrol Tombol Geser Kiri & Kanan
     document.addEventListener('DOMContentLoaded', function() {
         const scroller = document.getElementById('areaNavScroller');
         const btnLeft = document.getElementById('btnSlideLeft');

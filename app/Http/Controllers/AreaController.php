@@ -82,22 +82,49 @@ class AreaController extends Controller
     public function updateKuota(Request $request)
     {
         $request->validate([
-            'area_id'        => 'required|exists:areas,id',
-            'kapasitas_baru' => 'required|integer|min:1'
+            'area_id'         => 'required|exists:areas,id',
+            'kapasitas_umum'  => 'required|integer|min:0',
+            'kapasitas_dosen' => 'required|integer|min:0',
+            'khusus_dosen'    => 'nullable|boolean',
         ]);
 
         $area = Area::findOrFail($request->area_id);
-        $terisiSaatIni = Parkir::where('area_id',$area->id)->where('status', 'AKTIF')->count();
 
-        // Cegah kapasitas baru lebih kecil dari jumlah kendaraan yang sedang parkir saat ini
-        if ($request->kapasitas_baru <$terisiSaatIni) {
-            return back()->with('error', "Gagal! Saat ini masih ada {$terisiSaatIni} kendaraan parkir aktif di {$area->nama_area}.");
+        // Jika mode "100% Khusus Dosen" dicentang, slot umum otomatis 0
+        $isFullDosen    = $request->has('khusus_dosen');
+        $kapasitasDosen = (int) $request->kapasitas_dosen;
+        $kapasitasUmum  = $isFullDosen ? 0 : (int) $request->kapasitas_umum;
+        $kapasitasTotal = $kapasitasDosen + $kapasitasUmum;
+
+        if ($kapasitasTotal < 1) {
+            return back()->with('error', 'Total kapasitas parkir (Dosen + Umum) minimal harus 1 slot!');
+        }
+
+        // Validasi 1: Cek kendaraan yang sedang parkir di Zona Dosen (nomor_slot <= kapasitas_dosen lama)
+        $terisiZonaDosen = Parkir::where('area_id', $area->id)
+            ->where('status', 'AKTIF')
+            ->where('nomor_slot', '<=', $area->kapasitas_dosen)
+            ->count();
+
+        if ($kapasitasDosen < $terisiZonaDosen) {
+            return back()->with('error', "Gagal! Saat ini ada {$terisiZonaDosen} kendaraan dosen yang aktif di Zona Dosen {$area->nama_area}.");
+        }
+
+        // Validasi 2: Cek total kendaraan yang sedang parkir secara keseluruhan
+        $totalTerisi = Parkir::where('area_id', $area->id)
+            ->where('status', 'AKTIF')
+            ->count();
+
+        if ($kapasitasTotal < $totalTerisi) {
+            return back()->with('error', "Gagal! Total kapasitas baru ({$kapasitasTotal}) lebih kecil dari jumlah kendaraan yang sedang terparkir ({$totalTerisi} unit).");
         }
 
         $area->update([
-            'kapasitas_total' => $request->kapasitas_baru
+            'kapasitas_dosen' => $kapasitasDosen,
+            'kapasitas_total' => $kapasitasTotal,
+            'khusus_dosen'    => $isFullDosen,
         ]);
 
-        return back()->with('success', 'Batas kuota ' . $area->nama_area . ' berhasil dikonfigurasi ulang menjadi ' .$request->kapasitas_baru . ' Slot.');
+        return back()->with('success', "Kuota {$area->nama_area} diperbarui: {$kapasitasDosen} Slot Dosen & {$kapasitasUmum} Slot Umum (Total: {$kapasitasTotal} Slot).");
     }
 }

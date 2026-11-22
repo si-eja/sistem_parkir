@@ -150,7 +150,7 @@
                     Pusat Kendali E-Parkir Universitas Siliwangi
                 </h3>
                 <p class="mb-0 small" style="color: #bbf7d0;">
-                    Pantau okupansi seluruh titik fakultas, kelola kapasitas slot dinamis, dan audit log transaksi parkir kampus.
+                    Pantau okupansi seluruh titik fakultas, kelola kapasitas slot dinamis, area khusus dosen, dan audit log transaksi parkir kampus.
                 </p>
             </div>
             <div class="col-lg-4 text-lg-end">
@@ -239,7 +239,7 @@
                         <h5 class="fw-bold text-dark mb-0">
                             <i class="bi bi-building-gear text-unsil me-1"></i> Manajemen Kapasitas & Area Parkir
                         </h5>
-                        <small class="text-muted">Kelola batas kuota slot dinamis atau tinjau denah grid per fakultas</small>
+                        <small class="text-muted">Kelola batas kuota slot dinamis, akses khusus dosen, atau tinjau denah grid</small>
                     </div>
                     <div style="min-width: 220px;">
                         <input type="text" id="searchAreaAdmin" class="form-control form-control-sm rounded-3" placeholder="🔍 Cari kode / nama area...">
@@ -251,7 +251,7 @@
                         <thead style="background-color: var(--unsil-green-light); color: var(--unsil-green-dark);">
                             <tr class="small">
                                 <th>KODE</th>
-                                <th>NAMA AREA FAKULTAS</th>
+                                <th>NAMA AREA & KATEGORI</th>
                                 <th style="min-width: 160px;">OKUPANSI SLOT</th>
                                 <th class="text-center">STATUS</th>
                                 <th class="text-end">KONTROL</th>
@@ -283,8 +283,26 @@
                                         <span class="badge badge-unsil-solid px-2.5 py-1.5 rounded-3">{{ $area->kode_area }}</span>
                                     </td>
                                     <td>
-                                        <div class="fw-bold text-dark">{{ $area->nama_area }}</div>
-                                        <small class="text-muted">Sisa Kosong: <strong class="text-unsil">{{ $sisa }}</strong> slot</small>
+                                        <div class="d-flex flex-wrap align-items-center gap-1.5 mb-1">
+                                            <span class="fw-bold text-dark">{{ $area->nama_area }}</span>
+                                            @if($area->khusus_dosen || ($area->kapasitas_dosen > 0 && $area->kapasitas_dosen == $area->kapasitas_total))
+                                                <span class="badge bg-dark text-warning px-2 py-0.5 rounded-pill" style="font-size: 0.65rem;">
+                                                    <i class="bi bi-star-fill me-1"></i> Full Dosen
+                                                </span>
+                                            @elseif($area->kapasitas_dosen > 0)
+                                                <span class="badge bg-warning bg-opacity-25 text-dark border border-warning px-2 py-0.5 rounded-pill" style="font-size: 0.65rem;">
+                                                    Campuran (Dosen & Umum)
+                                                </span>
+                                            @else
+                                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-2 py-0.5 rounded-pill" style="font-size: 0.65rem;">
+                                                    Umum
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <small class="text-muted d-block">
+                                            Alokasi: <strong class="text-dark">{{ $area->kapasitas_dosen ?? 0 }}</strong> Dosen &bull; 
+                                            <strong class="text-unsil">{{ max(0, $area->kapasitas_total - ($area->kapasitas_dosen ?? 0)) }}</strong> Umum
+                                        </small>
                                     </td>
                                     <td>
                                         <div class="d-flex justify-content-between small fw-semibold mb-1">
@@ -311,7 +329,7 @@
                                                     class="btn btn-gear-yellow btn-sm rounded-3 px-2.5" 
                                                     data-bs-toggle="modal" 
                                                     data-bs-target="#modalKuota{{ $area->id }}"
-                                                    title="Atur Kapasitas Kuota">
+                                                    title="Atur Kapasitas & Kategori Area">
                                                 <i class="bi bi-sliders"></i>
                                             </button>
                                         </div>
@@ -347,7 +365,12 @@
                             @endphp
                             <div class="p-2.5 rounded-3 border" style="background-color: #f8faf9; border-color: #d1e2d8 !important;">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <span class="fw-bold text-dark small text-truncate pe-2">{{ $topArea->nama_area }}</span>
+                                    <span class="fw-bold text-dark small text-truncate pe-2">
+                                        {{ $topArea->nama_area }}
+                                        @if(!empty($topArea->khusus_dosen) && $topArea->khusus_dosen)
+                                            <span class="badge bg-dark text-warning ms-1" style="font-size: 0.6rem;">Dosen</span>
+                                        @endif
+                                    </span>
                                     <span class="badge bg-unsil-soft text-unsil small">{{ $tPersen }}%</span>
                                 </div>
                                 <div class="progress rounded-pill" style="height: 6px; background-color: #d1e2d8;">
@@ -365,7 +388,7 @@
                 <div class="mt-4 pt-3 border-top small text-muted">
                     <div class="d-flex align-items-center gap-2">
                         <i class="bi bi-info-circle-fill text-unsil"></i>
-                        <span>Klik ikon <i class="bi bi-sliders text-warning"></i> pada tabel untuk mengubah kuota slot fakultas secara dinamis.</span>
+                        <span>Klik ikon <i class="bi bi-sliders text-warning"></i> pada tabel untuk mengubah kuota slot atau mengaktifkan mode <strong>Khusus Dosen</strong>.</span>
                     </div>
                 </div>
             </div>
@@ -426,14 +449,18 @@
 
 </div>
 
-<!-- ==================== LOOP KHUSUS UNTUK MODAL KONFIGURASI KUOTA (DI LUAR CONTAINER AOS) ==================== -->
+<!-- ==================== LOOP KHUSUS UNTUK MODAL KONFIGURASI KUOTA & KATEGORI (DI LUAR CONTAINER AOS) ==================== -->
 @foreach($semua_area as $area)
+    @php
+        $kuotaDosenSaatIni = (int) ($area->kapasitas_dosen ?? 0);
+        $kuotaUmumSaatIni  = max(0, (int) $area->kapasitas_total - $kuotaDosenSaatIni);
+    @endphp
     <div class="modal fade" id="modalKuota{{ $area->id }}" tabindex="-1" aria-labelledby="modalKuotaLabel{{ $area->id }}" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
                 <div class="modal-header text-white border-0" style="background-color: var(--unsil-green); border-bottom: 3px solid var(--unsil-yellow) !important;">
                     <h6 class="modal-title fw-bold" id="modalKuotaLabel{{ $area->id }}">
-                        <i class="bi bi-sliders text-warning me-1"></i> Konfigurasi Kuota — {{ $area->nama_area }}
+                        <i class="bi bi-sliders text-warning me-1"></i> Atur Kapasitas — {{ $area->nama_area }}
                     </h6>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -444,24 +471,95 @@
                         <div class="p-3 rounded-3 mb-3 small d-flex justify-content-between" 
                              style="background-color: var(--unsil-green-light); color: var(--unsil-green-dark);">
                             <span>Kode Area: <strong>{{ $area->kode_area }}</strong></span>
-                            <span>Sedang Terisi: <strong>{{ $area->parkir_aktif_count ?? 0 }} Slot</strong></span>
+                            <span>Sedang Terisi: <strong>{{ $area->parkir_aktif_count ?? 0 }} / {{ $area->kapasitas_total }} Slot</strong></span>
                         </div>
 
-                        <label class="form-label small fw-semibold text-muted">Kapasitas Baru Slot Parkir</label>
-                        <input type="number" name="kapasitas_baru" class="form-control form-control-lg rounded-3 fw-bold" value="{{ $area->kapasitas_total }}" min="1" required>
-                        <small class="text-muted d-block mt-2" style="font-size: 0.75rem;">
-                            *Mengubah angka ini akan memperluas atau mempersempit nomor slot dinamis ({{ $area->kode_area }}001 s/d {{ $area->kode_area }}XXX) secara otomatis.
-                        </small>
+                        <div class="row g-3 mb-3">
+                            <!-- INPUT KAPASITAS KHUSUS DOSEN -->
+                            <div class="col-6">
+                                <label class="form-label small fw-bold text-dark">
+                                    <i class="bi bi-star-fill text-warning me-1"></i> Kuota Khusus Dosen
+                                </label>
+                                <input type="number" 
+                                       name="kapasitas_dosen" 
+                                       id="inputDosen{{ $area->id }}"
+                                       class="form-control form-control-lg rounded-3 fw-bold border-warning" 
+                                       value="{{ $kuotaDosenSaatIni }}" 
+                                       min="0" 
+                                       oninput="hitungTotalSlot({{ $area->id }})"
+                                       required>
+                                <small class="text-muted" style="font-size: 0.7rem;">Slot {{ $area->kode_area }}001 – awal</small>
+                            </div>
+
+                            <!-- INPUT KAPASITAS UMUM / MAHASISWA -->
+                            <div class="col-6">
+                                <label class="form-label small fw-bold text-unsil">
+                                    <i class="bi bi-mortarboard-fill me-1"></i> Kuota Umum / Mhs
+                                </label>
+                                <input type="number" 
+                                       name="kapasitas_umum" 
+                                       id="inputUmum{{ $area->id }}"
+                                       class="form-control form-control-lg rounded-3 fw-bold" 
+                                       value="{{ $kuotaUmumSaatIni }}" 
+                                       min="0" 
+                                       {{ $area->khusus_dosen ? 'readonly' : '' }}
+                                       oninput="hitungTotalSlot({{ $area->id }})"
+                                       required>
+                                <small class="text-muted" style="font-size: 0.7rem;">Slot setelah zona dosen</small>
+                            </div>
+                        </div>
+
+                        <!-- PREVIEW TOTAL SLOT OTOMATIS -->
+                        <div class="alert alert-light border d-flex justify-content-between align-items-center py-2 px-3 rounded-3 mb-3">
+                            <span class="small text-muted fw-semibold">Total Kapasitas Gabungan:</span>
+                            <span class="fw-bold fs-6 text-unsil"><span id="previewTotal{{ $area->id }}">{{ $area->kapasitas_total }}</span> Slot</span>
+                        </div>
+
+                        <!-- OPSI KUNCI FULL KHUSUS DOSEN -->
+                        <div class="p-3 rounded-3 border" style="background-color: #fefce8; border-color: #fde047 !important;">
+                            <div class="form-check form-switch mb-1">
+                                <input class="form-check-input" type="checkbox" role="switch" id="switchDosen{{ $area->id }}" 
+                                       name="khusus_dosen" value="1" 
+                                       {{ $area->khusus_dosen ? 'checked' : '' }}
+                                       onchange="toggleFullDosen({{ $area->id }})">
+                                <label class="form-check-label fw-bold text-dark small" for="switchDosen{{ $area->id }}">
+                                    Kunci Area 100% Khusus Dosen
+                                </label>
+                            </div>
+                            <small class="text-muted d-block" style="font-size: 0.72rem;">
+                                Jika diaktifkan, kuota umum otomatis menjadi 0 dan seluruh area ini hanya bisa dimasuki oleh Dosen.
+                            </small>
+                        </div>
                     </div>
                     <div class="modal-footer border-0 pt-0 px-4 pb-4">
                         <button type="button" class="btn btn-light rounded-3 fw-semibold" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-unsil-primary rounded-3 fw-semibold px-4">Simpan Perubahan</button>
+                        <button type="submit" class="btn btn-unsil-primary rounded-3 fw-semibold px-4">Simpan Kapasitas</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 @endforeach
+
+<script>
+    function hitungTotalSlot(areaId) {
+        const dosen = parseInt(document.getElementById('inputDosen' + areaId).value) || 0;
+        const umum  = parseInt(document.getElementById('inputUmum' + areaId).value) || 0;
+        document.getElementById('previewTotal' + areaId).innerText = dosen + umum;
+    }
+
+    function toggleFullDosen(areaId) {
+        const isChecked = document.getElementById('switchDosen' + areaId).checked;
+        const inputUmum = document.getElementById('inputUmum' + areaId);
+        if (isChecked) {
+            inputUmum.value = 0;
+            inputUmum.setAttribute('readonly', true);
+        } else {
+            inputUmum.removeAttribute('readonly');
+        }
+        hitungTotalSlot(areaId);
+    }
+</script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {

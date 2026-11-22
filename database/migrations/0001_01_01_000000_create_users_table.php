@@ -20,14 +20,6 @@ return new class extends Migration
             // Role Pengguna Sistem
             $table->enum('role', ['PENGENDARA', 'JUKIR', 'ADMIN'])->default('PENGENDARA');
             
-            // Master Profil Kendaraan Pengendara (Universal)
-            $table->string('plat_nomor');
-            $table->enum('jenis_kendaraan', ['MOTOR', 'MOBIL'])->default('MOTOR');
-            $table->enum('kategori_pengguna', ['MAHASISWA', 'DOSEN', 'STAFF', 'UMUM'])->default('MAHASISWA');
-            
-            // Token Permanen untuk QR Code / Barcode
-            $table->string('qr_code_token')->unique();
-            
             $table->rememberToken();
             $table->timestamps();
         });

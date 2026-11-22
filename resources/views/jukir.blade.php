@@ -87,6 +87,42 @@
 @endsection
 
 @section('content')
+{{-- NOTIFIKASI PENOLAKAN AKSES / SUKSES SCAN QR --}}
+@if(session('error'))
+    <div class="alert alert-danger border-2 border-danger rounded-4 shadow-sm d-flex align-items-center gap-3 mb-4" role="alert">
+        <i class="bi bi-x-octagon-fill fs-2 text-danger"></i>
+        <div>
+            <div class="fw-bold text-uppercase">Peringatan Gerbang Parkir</div>
+            <div class="small">{{ session('error') }}</div>
+        </div>
+    </div>
+@endif
+
+@if(session('success'))
+    <div class="alert alert-success border-2 border-success rounded-4 shadow-sm d-flex align-items-center gap-3 mb-4" role="alert">
+        <i class="bi bi-check-circle-fill fs-2 text-success"></i>
+        <div>
+            <div class="fw-bold">Transaksi Berhasil</div>
+            <div class="small">{{ session('success') }}</div>
+        </div>
+    </div>
+@endif
+
+{{-- BANNER STATUS AREA KHUSUS DOSEN --}}
+@php
+    $isAreaDosen = (bool) ($area->khusus_dosen ?? false) || (($area->kapasitas_dosen ?? 0) > 0 && ($area->kapasitas_dosen >= $area->kapasitas_total));
+@endphp
+
+@if($isAreaDosen)
+    <div class="alert rounded-4 border-2 mb-4 d-flex align-items-center gap-3"
+         style="background-color: #fefce8; border-color: #eab308; color: #713f12;">
+        <i class="bi bi-star-fill fs-3 text-warning"></i>
+        <div>
+            <div class="fw-bold">MODE POS: AREA PARKIR KHUSUS DOSEN</div>
+            <small>Hanya menerima pemindaian <strong>QR Code Dosen</strong>. QR Code Mahasiswa dan input manual tamu otomatis ditolak.</small>
+        </div>
+    </div>
+@endif
 <div class="container-fluid p-0" data-aos="fade-up">
 
     <!-- HEADER RINGKAS STATUS POS -->

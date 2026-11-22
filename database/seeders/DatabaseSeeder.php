@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Area;
+use App\Models\Pengendara;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -14,35 +15,52 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. MEMBUAT AKUN MASTER UTAMA (ADMIN, JUKIR, & PENGENDARA SAMPLE)
+        // 1. AKUN ADMIN
         User::create([
-            'name'             => 'Anton Admin',
-            'email'            => 'anton@admin.com',
-            'password'         => Hash::make('password123'),
-            'role'             => 'ADMIN',
-            'plat_nomor'       => 'Z 1 ADM',
-            'jenis_kendaraan'  => 'MOBIL',
-            'kategori_pengguna'=> 'STAFF',
+            'name'     => 'Admin E-Parkir UNSIL',
+            'email'    => 'admin@unsil.ac.id',
+            'password' => Hash::make('password123'),
+            'role'     => 'ADMIN',
         ]);
 
+        // 2. AKUN PETUGAS JURU PARKIR (JUKIR)
         User::create([
-            'name'             => 'Budi Jukir',
-            'email'            => 'budi@parkir.com',
-            'password'         => Hash::make('password123'),
-            'role'             => 'JUKIR',
-            'plat_nomor'       => 'Z 2 JKR',
-            'jenis_kendaraan'  => 'MOTOR',
-            'kategori_pengguna'=> 'STAFF',
+            'name'     => 'Kang Asep (Jukir FT)',
+            'email'    => 'jukir@unsil.ac.id',
+            'password' => Hash::make('password123'),
+            'role'     => 'JUKIR',
         ]);
 
-        User::create([
-            'name'             => 'Budi Santoso (Pengendara)',
-            'email'            => 'pengendara@parkir.com',
-            'password'         => Hash::make('password123'),
-            'role'             => 'PENGENDARA',
-            'plat_nomor'       => 'Z 1234 AB',
-            'jenis_kendaraan'  => 'MOTOR',
-            'kategori_pengguna'=> 'MAHASISWA',
+        // 3. AKUN PENGENDARA: MAHASISWA
+        $mhsUser = User::create([
+            'name'     => 'Rizky Pratama',
+            'email'    => 'mahasiswa@student.unsil.ac.id',
+            'password' => Hash::make('password123'),
+            'role'     => 'PENGENDARA',
+        ]);
+
+        Pengendara::create([
+            'user_id'         => $mhsUser->id,
+            'kategori'        => 'MAHASISWA',
+            'nomor_identitas' => '227006045',
+            'plat_nomor'      => 'Z4521HB',
+            'jenis_kendaraan' => 'MOTOR',
+        ]);
+
+        // 4. AKUN PENGENDARA: DOSEN
+        $dosenUser = User::create([
+            'name'     => 'Dr. Hendra Gunawan, M.T.',
+            'email'    => 'dosen@unsil.ac.id',
+            'password' => Hash::make('password123'),
+            'role'     => 'PENGENDARA',
+        ]);
+
+        Pengendara::create([
+            'user_id'         => $dosenUser->id,
+            'kategori'        => 'DOSEN',
+            'nomor_identitas' => '198405122014041002',
+            'plat_nomor'      => 'Z1024AA',
+            'jenis_kendaraan' => 'MOBIL',
         ]);
 
 
